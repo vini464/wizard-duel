@@ -1,4 +1,4 @@
-package wizardduel
+package share
 
 import (
 	"encoding/binary"
