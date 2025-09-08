@@ -53,6 +53,8 @@ func handle_client(conn net.Conn) {
 		get_booster(message, conn)
 	case share.PLAY:
 		play(message)
+  case share.LOGOUT:
+    log_out(message, conn)
 	default:
 		fmt.Println("[error] unknow command:", message.Type)
 	}
@@ -138,9 +140,21 @@ func get_booster(message share.Message, conn net.Conn) {
 	if user.Coins >= 5 {
 		response.Type = share.OK
 		share.SendMessage(conn, response)
-
 	}
 	response.Type = share.ERROR
+	share.SendMessage(conn, response)
+}
+
+func log_out(message share.Message, conn net.Conn) {
+	_, ok := ONLINEUSERS[message.Uuid]
+	response := share.Message{}
+	if !ok {
+		response.Type = share.ERROR
+		share.SendMessage(conn, response)
+		return
+	}
+	delete(ONLINEUSERS, message.Uuid)
+	response.Type = share.OK
 	share.SendMessage(conn, response)
 }
 
