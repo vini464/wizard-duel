@@ -1,0 +1,75 @@
+package wizardduel
+
+import (
+	"encoding/binary"
+	"encoding/json"
+	"net"
+)
+
+// this module standardizes the communication between client and server
+
+type Message struct {
+	Type string `json:"type"` // it can be a command or a status like (login or OK)
+	Data []byte `json:"data"`
+}
+
+const (
+	LOGIN      = "LOGIN"
+	REGISTER   = "REGISTER"
+	GETBOOSTER = "GETBOOSTER"
+	SAVEDECK   = "SAVEDECK"
+	PLAY       = "PLAY"
+	PLACECARD  = "PLACECARD"
+	SKIPPHASE  = "SKIPPHASE"
+	SURRENDER  = "SURRENDER"
+	OK         = "OK"
+	ERROR      = "ERROR"
+	INQUEUE    = "INQUEUE"
+	PLAYING    = "PLAYING"
+)
+
+// this function sends a message through a connection and return any occourred error
+func SendMessage(conn net.Conn, message Message) error {
+	serialized, err := json.Marshal(message)
+	if err != nil {
+		return err
+	}
+	header := make([]byte, 4)
+	message_size := len(serialized)
+	binary.BigEndian.PutUint32(header, uint32(message_size))
+
+	_, err = conn.Write(header)
+	if err != nil {
+		return err
+	}
+
+	_, err = conn.Write(serialized)
+
+	return err
+}
+
+// this function recieves a message through connection saves the info in the given pointer and return any occourred error
+func ReceiveMessage(conn net.Conn, message *Message) error {
+	header := make([]byte, 4)
+	bytes_received := 0
+	for bytes_received < len(header) {
+		readed, err := conn.Read(header[bytes_received:])
+		if err != nil {
+			return err
+		}
+		bytes_received += readed
+	}
+	data_length := int(binary.BigEndian.Uint32(header))
+	data := make([]byte, data_length)
+	bytes_received = 0
+	for bytes_received < len(data) {
+		readed, err := conn.Read(data[bytes_received:])
+		if err != nil {
+			return err
+		}
+		bytes_received += readed
+	}
+
+	err := json.Unmarshal(data, message)
+	return err
+}
