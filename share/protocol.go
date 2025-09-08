@@ -10,7 +10,8 @@ import (
 
 type Message struct {
 	Type string `json:"type"` // it can be a command or a status like (login or OK)
-	Data []byte `json:"data"`
+	Data []byte `json:"data,omitempty"`
+  Uuid string `json:"uuid,omitempty"`
 }
 
 const (
