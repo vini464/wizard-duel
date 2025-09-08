@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -54,9 +55,15 @@ func handle_client(conn net.Conn) {
 	}
 }
 
-func register(serialized_data []byte) {
+func register(serialized_data []byte) error {
+  var credentials map[string]string 
+  err := json.Unmarshal(serialized_data, &credentials)
+  if err != nil {
+    return err
+  }
   
 
+  return err
 }
 func login(serialized_data []byte) {
 

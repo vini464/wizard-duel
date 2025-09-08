@@ -23,3 +23,11 @@ type Effect struct {
 	Type   string `json:"type"`
 	Amount int    `json:"amount"`
 }
+
+func NewUser(username string, password string) *User{
+  return &User{
+    Username: username,
+    Password: password, // hash it later
+    Coins: 120,
+  }
+}
