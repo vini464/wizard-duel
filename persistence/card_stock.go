@@ -28,7 +28,7 @@ func RetrieveStock() []StockCard {
 }
 
 func ReplaceStock(new_stock []StockCard) bool {
-	ser, err := json.Marshal(new_stock)
+	ser, err := json.MarshalIndent(new_stock, "", " ")
 	if err == nil {
 		_, err = OverwriteFile(CARDSTOCK, ser)
 	}

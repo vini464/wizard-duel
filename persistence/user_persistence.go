@@ -25,7 +25,7 @@ func SaveUser(filepath string, user share.User) bool {
 		}
 	}
 	users = append(users, user)
-	users_bytes, err := json.Marshal(users)
+	users_bytes, err := json.MarshalIndent(users, "", " ")
 	if err != nil {
     fmt.Println("[error] Marshall error")
 		return false
@@ -66,7 +66,7 @@ func DeleteUser(filepath string, user share.User) bool {
 	for id, saved_user := range users {
 		if saved_user.Username == user.Username && saved_user.Password == user.Password {
       users = append(users[:id], users[id+1:]...) // removing given user only if username and password matches
-			users_bytes, err := json.Marshal(users)
+      users_bytes, err := json.MarshalIndent(users, "", " ")
 			if err != nil {
 				return false
 			}
