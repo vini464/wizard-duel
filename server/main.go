@@ -35,7 +35,7 @@ func main() {
 		if err != nil {
 			fmt.Println("[error] - connection lost")
 		} else {
-      fmt.Println("[debug] - Client Connected", conn.RemoteAddr())
+			fmt.Println("[debug] - Client Connected", conn.RemoteAddr())
 			go handle_client(conn, &user_db, &card_db)
 		}
 	}
@@ -98,7 +98,7 @@ func register(message share.Message, conn net.Conn, user_db *sync.Mutex) {
 	user_db.Lock()
 	success := persistence.SaveUser(USERSFILEPATH, *newuser)
 	user_db.Unlock()
-  fmt.Println("[debug] success:", success)
+	fmt.Println("[debug] success:", success)
 	if success {
 		response.Type = share.OK
 		share.SendMessage(conn, response)
@@ -124,12 +124,16 @@ func login(message share.Message, conn net.Conn, user_db *sync.Mutex) {
 	user_db.Unlock()
 	if saved_user != nil {
 		if saved_user.Password == share.HashText(credentials["password"]) {
-			uuid := share.HashText(saved_user.Username)
-			ONLINEUSERS[uuid] = saved_user.Username
-			response.Type = share.OK
-			response.Uuid = uuid
-			share.SendMessage(conn, response)
-			return
+			ser, err := json.Marshal(*saved_user)
+			if err == nil {
+				uuid := share.HashText(saved_user.Username)
+				ONLINEUSERS[uuid] = saved_user.Username
+				response.Type = share.OK
+				response.Uuid = uuid
+        response.Data = ser
+				share.SendMessage(conn, response)
+				return
+			}
 		}
 	}
 	response.Type = share.ERROR

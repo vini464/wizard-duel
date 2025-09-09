@@ -21,12 +21,12 @@ func main() {
 		case 0:
 			login(credentials)
 		case 1:
-      ok := register(credentials)
-      if ok {
-        fmt.Println("[debug] - User registered!")
-      } else {
-        fmt.Println("[debug] - User not registered!")
-      }
+			ok := register(credentials)
+			if ok {
+				fmt.Println("[debug] - User registered!")
+			} else {
+				fmt.Println("[debug] - User not registered!")
+			}
 		case 2:
 			return
 		}
@@ -36,13 +36,13 @@ func main() {
 func register(credentials map[string]string) bool {
 	conn, err := net.Dial(share.SERVERTYPE, net.JoinHostPort(share.SERVERNAME, share.SERVERPORT))
 	if err != nil {
-    fmt.Println("[error] - Unable to Connect")
+		fmt.Println("[error] - Unable to Connect")
 		return false
 	}
 	defer conn.Close()
 	ser, err := json.Marshal(credentials)
 	if err != nil {
-    fmt.Println("[error] - Serialization Failed")
+		fmt.Println("[error] - Serialization Failed")
 		return false
 	}
 	message := share.Message{
@@ -50,51 +50,58 @@ func register(credentials map[string]string) bool {
 		Data: ser,
 	}
 	err = share.SendMessage(conn, message)
-  fmt.Println("[error] - error connection")
+	fmt.Println("[error] - error connection")
 	if err != nil {
 		return false
 	}
 	err = share.ReceiveMessage(conn, &message)
 	if err != nil || message.Type == share.ERROR {
-    fmt.Println("[error] - error connection, message type:", message.Type)
+		fmt.Println("[error] - error connection, message type:", message.Type)
 		return false
 	}
 	return true
 }
 
 func login(credentials map[string]string) {
+	var user share.User
 	conn, err := net.Dial(share.SERVERTYPE, net.JoinHostPort(share.SERVERNAME, share.SERVERPORT))
 	if err != nil {
-    fmt.Println("[error] - Unable to Connect")
+		fmt.Println("[error] - Unable to Connect")
 		return
 	}
 	defer conn.Close()
-  ser, err := json.Marshal(credentials)
+	ser, err := json.Marshal(credentials)
 	if err != nil {
-    fmt.Println("[error] - Unable to Connect")
-		return 
+		fmt.Println("[error] - Unable to Connect")
+		return
 	}
 	message := share.Message{
 		Type: share.LOGIN,
 		Data: ser,
 	}
-  err = share.SendMessage(conn, message)
+	err = share.SendMessage(conn, message)
 	if err != nil {
-    fmt.Println("[error] - Unable to Connect")
-		return 
+		fmt.Println("[error] - Unable to Connect")
+		return
 	}
-  err = share.ReceiveMessage(conn, &message)
+	err = share.ReceiveMessage(conn, &message)
 	if err != nil {
-    fmt.Println("[error] - Unable to Connect")
-		return 
+		fmt.Println("[error] - Unable to Connect")
+		return
 	}
 	if message.Type == share.ERROR {
-    fmt.Println("[error] - wrong username or password")
-		return 
+		fmt.Println("[error] - wrong username or password")
+		return
 	}
-  uuid := message.Uuid
+	uuid := message.Uuid
+	err = json.Unmarshal(message.Data, &user)
+	if err != nil {
+		fmt.Println("[error] - Unable to Connect")
+		return
+	}
 
-  fmt.Println("[debug] - Connected, uuid:", uuid)
+	fmt.Println("[debug] - Connected, uuid:", uuid)
+	fmt.Println("[debug] - Connected, user:", user)
 }
 
 func Menu(title string, args ...string) int {
