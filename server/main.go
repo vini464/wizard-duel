@@ -51,13 +51,13 @@ func handle_client(conn net.Conn, user_db *sync.Mutex, card_db *sync.Mutex) {
 	}
 	switch message.Type {
 	case share.REGISTER:
-		register(message, conn)
+		register(message, conn, user_db)
 	case share.LOGIN:
-		login(message, conn)
+		login(message, conn, user_db)
 	case share.SAVEDECK:
-		save_deck(message, conn)
+		save_deck(message, conn, user_db)
 	case share.GETBOOSTER:
-		get_booster(message, conn)
+		get_booster(message, conn, user_db)
 	case share.PLAY:
 		play(message)
 	case share.LOGOUT:
