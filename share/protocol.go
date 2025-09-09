@@ -3,15 +3,18 @@ package share
 import (
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"net"
+	"time"
 )
 
 // this module standardizes the communication between client and server
 
 type Message struct {
-	Type string `json:"type"` // it can be a command or a status like (login or OK)
-	Data []byte `json:"data,omitempty"`
-	Uuid string `json:"uuid,omitempty"`
+	Type      string `json:"type"` // it can be a command or a status like (login or OK)
+	Data      []byte `json:"data,omitempty"`
+	Uuid      string `json:"uuid,omitempty"`
+	TimeStamp int64  `json:"timestamp"`
 }
 
 // message constants
@@ -33,13 +36,14 @@ const (
 
 // communication constants
 const (
-  SERVERTYPE = "tcp"
-  SERVERNAME = "localhost"
-  SERVERPORT = "8080"
+	SERVERTYPE = "tcp"
+	SERVERNAME = "localhost"
+	SERVERPORT = "8080"
 )
 
 // this function sends a message through a connection and return any occourred error
 func SendMessage(conn net.Conn, message Message) error {
+	message.TimeStamp = time.Now().UnixMilli()
 	serialized, err := json.Marshal(message)
 	if err != nil {
 		return err
@@ -79,7 +83,11 @@ func ReceiveMessage(conn net.Conn, message *Message) error {
 		}
 		bytes_received += readed
 	}
-
+	currentTime := time.Now()
 	err := json.Unmarshal(data, message)
+	if err == nil {
+		message.TimeStamp = currentTime.UnixMilli() - message.TimeStamp
+		fmt.Println("[LATENCY] -", message.TimeStamp)
+	}
 	return err
 }
