@@ -28,7 +28,7 @@ func SaveCard(filepath string, card share.Card) bool {
 		return false
 	}
 	_, err = OverwriteFile(filepath, users_bytes)
-	return err != nil
+	return err == nil
 }
 
 func RetrieveCard(filepath string, name string) *share.Card {
@@ -67,7 +67,7 @@ func DeleteCard(filepath string, card share.Card) bool {
 				return false
 			}
 			_, err = OverwriteFile(filepath, cards_bytes)
-			return err != nil
+			return err == nil
 		}
 	}
 	return true // returns true if didn't find card

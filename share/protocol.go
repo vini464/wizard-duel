@@ -34,7 +34,7 @@ const (
 // communication constants
 const (
   SERVERTYPE = "tcp"
-  SERVERNAME = "server"
+  SERVERNAME = "localhost"
   SERVERPORT = "8080"
 )
 
