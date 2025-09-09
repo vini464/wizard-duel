@@ -10,6 +10,31 @@ type User struct {
 	Decks    map[string][]Card `json:"decks"` // deck name -> card list
 }
 
+type GameState struct {
+	Opponent struct {
+		Username  string `json:"username"`
+		Hand      int    `json:"hand"`
+		Deck      int    `json:"deck"`
+		Graveyard []Card `json:"graveyard"`
+		HP        int    `json:"hp"`
+		SP        int    `json:"sp"`
+		Energy    int    `json:"energy"`
+		Crystals  int    `json:"crystals"`
+	} `json:"opponent"`
+	You struct {
+		Hand      []Card `json:"hand"`
+		Deck      int    `json:"deck"`
+		Graveyard []Card `json:"graveyard"`
+		HP        int    `json:"hp"`
+		SP        int    `json:"sp"`
+		Energy    int    `json:"energy"`
+		Crystals  int    `json:"crystals"`
+	} `json:"you"`
+	Turn  string `json:"turn"`
+	Phase string `json:"phase"`
+	Round int    `json:"round"`
+}
+
 type Card struct {
 	Name    string   `json:"name"`
 	Type    string   `json:"type"`

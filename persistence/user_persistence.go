@@ -2,7 +2,6 @@ package persistence
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/vini464/wizard-duel/share"
 )
@@ -15,23 +14,19 @@ func SaveUser(filepath string, user share.User) bool {
 	var users []share.User
 	err = json.Unmarshal(f_bytes, &users)
 	if err != nil {
-    fmt.Println("[error] Unmarshal error")
 		return false
 	}
 	for _, saved_user := range users {
 		if saved_user.Username == user.Username {
-    fmt.Println("[error] user already exists")
 			return false
 		}
 	}
 	users = append(users, user)
 	users_bytes, err := json.MarshalIndent(users, "", " ")
 	if err != nil {
-    fmt.Println("[error] Marshall error")
 		return false
 	}
 	_, err = OverwriteFile(filepath, users_bytes)
-  fmt.Println("[debug] OverwriteFile error:", err)
 	return err == nil
 }
 
@@ -80,10 +75,8 @@ func DeleteUser(filepath string, user share.User) bool {
 
 func UpdateUser(filepath string, old_user share.User, new_user share.User) bool {
   ok := DeleteUser(filepath, old_user)
-  fmt.Println("[debug] user deleted?", ok)
   if ok {
     ok = SaveUser(filepath, new_user)
-    fmt.Println("[debug] user saved?", ok)
     return ok
   }
   return false

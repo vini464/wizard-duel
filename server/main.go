@@ -92,13 +92,10 @@ func register(message share.Message, conn net.Conn, user_db *sync.Mutex) {
 		share.SendMessage(conn, response)
 		return
 	}
-	fmt.Println("credentials:", credentials)
 	newuser := share.NewUser(credentials["username"], credentials["password"])
-	fmt.Println("newuser:", *newuser)
 	user_db.Lock()
 	success := persistence.SaveUser(USERSFILEPATH, *newuser)
 	user_db.Unlock()
-	fmt.Println("[debug] success:", success)
 	if success {
 		response.Type = share.OK
 		share.SendMessage(conn, response)

@@ -43,7 +43,7 @@ const (
 
 // this function sends a message through a connection and return any occourred error
 func SendMessage(conn net.Conn, message Message) error {
-	message.TimeStamp = time.Now().UnixMilli()
+	message.TimeStamp = time.Now().UnixNano()
 	serialized, err := json.Marshal(message)
 	if err != nil {
 		return err
@@ -86,8 +86,8 @@ func ReceiveMessage(conn net.Conn, message *Message) error {
 	currentTime := time.Now()
 	err := json.Unmarshal(data, message)
 	if err == nil {
-		message.TimeStamp = currentTime.UnixMilli() - message.TimeStamp
-		fmt.Println("[LATENCY] -", message.TimeStamp)
+		message.TimeStamp = currentTime.UnixNano() - message.TimeStamp
+		fmt.Println("[LATENCY] -", message.TimeStamp, "ns")
 	}
 	return err
 }
