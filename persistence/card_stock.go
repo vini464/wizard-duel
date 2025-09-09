@@ -96,7 +96,7 @@ func RemoveFromStock(cards ...share.Card) {
 	stock := RetrieveStock()
 	for _, card := range cards {
 		for id, card_stock := range stock {
-			if card_stock.Card.Name == card.Name {
+			if card_stock.Card.Name == card.Name && card_stock.Min < card_stock.Quantity{
 				stock[id].Quantity--
 			}
 		}

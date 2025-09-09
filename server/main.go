@@ -19,7 +19,7 @@ const (
 var ONLINEUSERS = make(map[string]string) // string uuid - string username
 
 func main() {
-  persistence.InitializeStock()
+	persistence.InitializeStock()
 	server, err := net.Listen(share.SERVERTYPE, net.JoinHostPort(share.SERVERNAME, share.SERVERPORT))
 	if err != nil {
 		panic(err)
@@ -130,7 +130,7 @@ func login(message share.Message, conn net.Conn, user_db *sync.Mutex) {
 				ONLINEUSERS[uuid] = saved_user.Username
 				response.Type = share.OK
 				response.Uuid = uuid
-        response.Data = ser
+				response.Data = ser
 				share.SendMessage(conn, response)
 				return
 			}
@@ -180,9 +180,23 @@ func get_booster(message share.Message, conn net.Conn, user_db *sync.Mutex, card
 	}
 	user_db.Lock()
 	user := persistence.RetrieveUser(USERSFILEPATH, username)
-	if user.Coins >= 5 { // TODO: create booster logic
-		response.Type = share.OK
-		share.SendMessage(conn, response)
+	user_db.Unlock()
+	if user.Coins >= 5 {
+		user.Coins -= 5
+		card_db.Lock()
+		booster := persistence.CreateBooster()
+		card_db.Unlock()
+		ser, err := json.Marshal(booster)
+		if err == nil {
+			user_db.Lock()
+			ok := persistence.UpdateUser(USERSFILEPATH, *user, *user)
+      user_db.Unlock()
+			if ok {
+				response.Type = share.OK
+				response.Data = ser
+				share.SendMessage(conn, response)
+			}
+		}
 	}
 	response.Type = share.ERROR
 	share.SendMessage(conn, response)
