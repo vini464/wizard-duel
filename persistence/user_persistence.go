@@ -80,3 +80,13 @@ func UpdateUser(filepath string, old_user share.User, new_user share.User) bool 
   }
   return false
 }
+
+func RetrieveAllUsers(filepath string) []share.User {
+  users := make([]share.User, 0)
+	f_bytes, err := ReadFile(filepath)
+	if err != nil {
+		return users
+	}
+	json.Unmarshal(f_bytes, &users)
+  return  users
+}
