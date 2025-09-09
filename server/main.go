@@ -14,12 +14,12 @@ import (
 
 const (
 	USERSFILEPATH = "database/users.json"
-	CARDSFILEPATH = "database/cards.json"
 )
 
 var ONLINEUSERS = make(map[string]string) // string uuid - string username
 
 func main() {
+  persistence.InitializeStock()
 	server, err := net.Listen(share.SERVERTYPE, net.JoinHostPort(share.SERVERNAME, share.SERVERPORT))
 	if err != nil {
 		panic(err)
@@ -67,7 +67,7 @@ func handle_client(conn net.Conn, user_db *sync.Mutex, card_db *sync.Mutex) {
 			save_deck(message, conn, user_db)
 		case share.GETBOOSTER:
 			fmt.Println("[debug] GETBOOSTER command:", message.Type)
-			get_booster(message, conn, user_db)
+			get_booster(message, conn, user_db, card_db)
 		case share.PLAY:
 			fmt.Println("[debug] PLAY command:", message.Type)
 			play(message)
@@ -170,7 +170,7 @@ func save_deck(message share.Message, conn net.Conn, user_db *sync.Mutex) {
 	share.SendMessage(conn, response)
 }
 
-func get_booster(message share.Message, conn net.Conn, user_db *sync.Mutex) {
+func get_booster(message share.Message, conn net.Conn, user_db *sync.Mutex, card_db *sync.Mutex) {
 	username, ok := ONLINEUSERS[message.Uuid]
 	response := share.Message{}
 	if !ok {

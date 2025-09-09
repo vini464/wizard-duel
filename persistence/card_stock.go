@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"encoding/json"
+	"math/rand/v2"
 
 	"github.com/vini464/wizard-duel/share"
 )
@@ -91,9 +92,63 @@ func GetByRarity(rarity string) []share.Card {
 	return commons
 }
 
+func RemoveFromStock(cards ...share.Card) {
+	stock := RetrieveStock()
+	for _, card := range cards {
+		for id, card_stock := range stock {
+			if card_stock.Card.Name == card.Name {
+				stock[id].Quantity--
+			}
+		}
+	}
+}
+
+func AddToStock(cards ...share.Card) {
+	stock := RetrieveStock()
+	for _, card := range cards {
+		for id, card_stock := range stock {
+			if card_stock.Card.Name == card.Name {
+				stock[id].Quantity++
+			}
+		}
+	}
+}
+
+func CreateBooster() []share.Card {
+	booster := make([]share.Card, 0)
+
+	common_cards := GetByRarity("common")
+	uncommon_cards := GetByRarity("uncommon")
+	rare_cards := GetByRarity("rare")
+	legendary_cards := GetByRarity("legendary")
+
+	for range 3 { // common cards
+		r := rand.IntN(len(common_cards))
+		booster = append(booster, common_cards[r])
+		common_cards = append(common_cards[:r], common_cards[r+1:]...)
+	}
+
+	// uncommon cards
+	booster = append(booster, common_cards[rand.IntN(len(uncommon_cards))])
+
+	// rare or legendary cards
+	r := rand.IntN(100)
+	if r < 15 && len(legendary_cards) > 0 {
+		booster = append(booster, legendary_cards[rand.IntN(len(legendary_cards))])
+	} else {
+		booster = append(booster, rare_cards[rand.IntN(len(rare_cards))])
+	}
+
+  RemoveFromStock(booster...) // remove all used cards from stock
+
+	return booster
+}
+
+
+
 func InitializeStock() {
-  cards := RetrieveAllCards(CARDTYPES)
-  for _, card := range cards {
-    AddCardToStock(card) 
-  }
+	cards := RetrieveAllCards(CARDTYPES)
+	for _, card := range cards {
+		AddCardToStock(card)
+	}
 }
