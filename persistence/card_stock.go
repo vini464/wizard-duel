@@ -90,3 +90,10 @@ func GetByRarity(rarity string) []share.Card {
 	}
 	return commons
 }
+
+func InitializeStock() {
+  cards := RetrieveAllCards(CARDTYPES)
+  for _, card := range cards {
+    AddCardToStock(card) 
+  }
+}
