@@ -29,3 +29,21 @@ func SaveUser(filepath string, user share.User) bool {
 	OverwriteFile(filepath, users_bytes)
 	return true
 }
+
+func RetrieveUser(filepath string, username string) *share.User {
+	f_bytes, err := ReadFile(filepath)
+	if err != nil {
+		return nil
+	}
+	var users []share.User
+	err = json.Unmarshal(f_bytes, &users)
+	if err != nil {
+		return nil
+	}
+	for _, saved_user := range users {
+		if saved_user.Username == username {
+			return &saved_user
+		}
+	}
+  return nil
+}
