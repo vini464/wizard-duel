@@ -65,12 +65,13 @@ func DeleteUser(filepath string, user share.User) bool {
 	}
 	for id, saved_user := range users {
 		if saved_user.Username == user.Username && saved_user.Password == user.Password {
-			users = append(users[id:], users[:id+1]...) // removing given user only if username and password matches
+      users = append(users[:id], users[id+1:]...) // removing given user only if username and password matches
 			users_bytes, err := json.Marshal(users)
 			if err != nil {
 				return false
 			}
 			_, err = OverwriteFile(filepath, users_bytes)
+      
 			return err == nil
 		}
 	}
@@ -79,8 +80,10 @@ func DeleteUser(filepath string, user share.User) bool {
 
 func UpdateUser(filepath string, old_user share.User, new_user share.User) bool {
   ok := DeleteUser(filepath, old_user)
+  fmt.Println("[debug] user deleted?", ok)
   if ok {
     ok = SaveUser(filepath, new_user)
+    fmt.Println("[debug] user saved?", ok)
     return ok
   }
   return false

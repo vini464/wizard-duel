@@ -31,7 +31,7 @@ func NewUser(username string, password string) *User {
 		Username: username,
 		Password: HashText(password),
 		Coins:    120,
-		Cards:    nil,
+		Cards:    make([]Card, 0),
 		Decks:    make(map[string][]Card),
 	}
 }

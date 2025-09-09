@@ -69,7 +69,6 @@ func login(credentials map[string]string) {
 		fmt.Println("[error] - Unable to Connect")
 		return
 	}
-	defer conn.Close()
 	ser, err := json.Marshal(credentials)
 	if err != nil {
 		fmt.Println("[error] - Unable to Connect")
@@ -102,6 +101,100 @@ func login(credentials map[string]string) {
 
 	fmt.Println("[debug] - Connected, uuid:", uuid)
 	fmt.Println("[debug] - Connected, user:", user)
+	conn.Close()
+	mainPage(uuid, user)
+}
+
+func mainPage(uuid string, user share.User) {
+	for {
+		choice := Menu("> MAIN PAGE <", "play", "booster", "create deck", "exit")
+		message := share.Message{
+			Uuid: uuid,
+		}
+
+		switch choice {
+		case 0:
+			conn, err := net.Dial(share.SERVERTYPE, net.JoinHostPort(share.SERVERNAME, share.SERVERPORT))
+			if err != nil {
+				fmt.Println("[error] - Unable to Connect")
+				return
+			}
+			message.Type = share.PLAY
+      err = share.SendMessage(conn, message)
+      conn.Close()
+		case 1:
+			conn, err := net.Dial(share.SERVERTYPE, net.JoinHostPort(share.SERVERNAME, share.SERVERPORT))
+			if err != nil {
+				fmt.Println("[error] - Unable to Connect")
+				return
+			}
+			fmt.Println("[debug] - getting booster")
+			message.Type = share.GETBOOSTER
+			err = share.SendMessage(conn, message)
+			if err != nil {
+				fmt.Println("[error] - Unable to Connect")
+				return
+			}
+			err = share.ReceiveMessage(conn, &message)
+			if err != nil {
+				fmt.Println("[error] - Unable to Connect")
+				return
+			}
+			if message.Type == share.OK {
+				var booster []share.Card
+				err = json.Unmarshal(message.Data, &booster)
+				if err != nil {
+					fmt.Println("[error] - Unmarshal error")
+					return
+				}
+				println("[debug] - booster cards:", booster)
+				user.Cards = append(user.Cards, booster...)
+			} else {
+				println("[debug] - Response", message.Type)
+			}
+    conn.Close()
+		case 2:
+			if len(user.Cards) > 20 {
+				deckcards := make([]share.Card, 0)
+				deckname := Input("Deck name: ")
+				for len(deckname) < 5 {
+					deckname = Input("Deck name: ")
+				}
+				for len(deckcards) < 20 {
+					for id, card := range user.Cards {
+						fmt.Println(id, "-", card)
+					}
+					choice, err := strconv.Atoi(Input("choose a card: "))
+					if err == nil && choice >= 0 && choice < len(user.Cards) {
+						deckcards = append(deckcards, user.Cards[choice])
+						user.Cards = append(user.Cards[:choice], user.Cards[choice+1:]...)
+					}
+				}
+				deck := make(map[string][]share.Card)
+				deck[deckname] = deckcards
+				ser, err := json.Marshal(deck)
+				if err != nil {
+					return
+				}
+				conn, err := net.Dial(share.SERVERTYPE, net.JoinHostPort(share.SERVERNAME, share.SERVERPORT))
+				if err != nil {
+					fmt.Println("[error] - Unable to Connect")
+					return
+				}
+				message.Data = ser
+				message.Type = share.SAVEDECK
+				err = share.SendMessage(conn, message)
+				if err != nil {
+					return
+				}
+				err = share.ReceiveMessage(conn, &message)
+				fmt.Println("[debug] response was:", message.Type)
+        conn.Close()
+			}
+		case 3:
+			return
+		}
+	}
 }
 
 func Menu(title string, args ...string) int {

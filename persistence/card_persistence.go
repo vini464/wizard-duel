@@ -61,7 +61,7 @@ func DeleteCard(filepath string, card share.Card) bool {
 	}
 	for id, saved_card := range cards {
 		if saved_card.Name == card.Name {
-			cards = append(cards[id:], cards[:id+1]...) // removing given card only if name matches
+      cards = append(cards[:id], cards[id+1:]...) // removing given card only if name matches
 			cards_bytes, err := json.Marshal(cards)
 			if err != nil {
 				return false

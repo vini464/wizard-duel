@@ -189,12 +189,14 @@ func get_booster(message share.Message, conn net.Conn, user_db *sync.Mutex, card
 		ser, err := json.Marshal(booster)
 		if err == nil {
 			user_db.Lock()
+      user.Cards = append(user.Cards, booster...)
 			ok := persistence.UpdateUser(USERSFILEPATH, *user, *user)
       user_db.Unlock()
 			if ok {
 				response.Type = share.OK
 				response.Data = ser
 				share.SendMessage(conn, response)
+        return
 			}
 		}
 	}
