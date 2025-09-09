@@ -69,5 +69,14 @@ func DeleteUser(filepath string, user share.User) bool {
 			return err != nil
 		}
 	}
-	return false
+	return true // returns true if didn't find user
+}
+
+func UpdateUser(filepath string, old_user share.User, new_user share.User) bool {
+  ok := DeleteUser(filepath, old_user)
+  if ok {
+    ok = SaveUser(filepath, new_user)
+    return ok
+  }
+  return false
 }
