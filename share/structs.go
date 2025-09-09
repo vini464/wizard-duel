@@ -5,9 +5,9 @@ package share
 type User struct {
 	Username string            `json:"username"`
 	Password string            `json:"password"`
-	Cards    []Card            `json:"cards"`  
-	Decks    map[string][]Card `json:"decks"` // deck name -> card list
 	Coins    int               `json:"coins"`
+	Cards    []Card            `json:"cards"`
+	Decks    map[string][]Card `json:"decks"` // deck name -> card list
 }
 
 type Card struct {
@@ -24,9 +24,14 @@ type Effect struct {
 }
 
 func NewUser(username string, password string) *User {
+	if username == "" || password == "" {
+		return nil
+	}
 	return &User{
 		Username: username,
-		Password: password, // hash it later
+		Password: HashText(password),
 		Coins:    120,
+		Cards:    nil,
+		Decks:    make(map[string][]Card),
 	}
 }
