@@ -26,8 +26,8 @@ func SaveUser(filepath string, user share.User) bool {
 	if err != nil {
 		return false
 	}
-	OverwriteFile(filepath, users_bytes)
-	return true
+	_, err = OverwriteFile(filepath, users_bytes)
+	return err != nil
 }
 
 func RetrieveUser(filepath string, username string) *share.User {
@@ -45,5 +45,29 @@ func RetrieveUser(filepath string, username string) *share.User {
 			return &saved_user
 		}
 	}
-  return nil
+	return nil
+}
+
+func DeleteUser(filepath string, user share.User) bool {
+	f_bytes, err := ReadFile(filepath)
+	if err != nil {
+		return false
+	}
+	var users []share.User
+	err = json.Unmarshal(f_bytes, &users)
+	if err != nil {
+		return false
+	}
+	for id, saved_user := range users {
+		if saved_user.Username == user.Username && saved_user.Password == user.Password {
+			users = append(users[id:], users[:id+1]...) // removing given user only if username and password matches
+			users_bytes, err := json.Marshal(users)
+			if err != nil {
+				return false
+			}
+			_, err = OverwriteFile(filepath, users_bytes)
+			return err != nil
+		}
+	}
+	return false
 }
