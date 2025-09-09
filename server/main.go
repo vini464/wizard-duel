@@ -20,7 +20,7 @@ const (
 var ONLINEUSERS = make(map[string]string) // string uuid - string username
 
 func main() {
-	server, err := net.Listen("tcp", "server:8080")
+	server, err := net.Listen(share.SERVERTYPE, net.JoinHostPort(share.SERVERNAME, share.SERVERPORT))
 	if err != nil {
 		panic(err)
 	}

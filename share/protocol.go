@@ -14,6 +14,7 @@ type Message struct {
 	Uuid string `json:"uuid,omitempty"`
 }
 
+// message constants
 const (
 	LOGIN      = "LOGIN"
 	LOGOUT     = "LOGOUT"
@@ -28,6 +29,13 @@ const (
 	ERROR      = "ERROR"
 	INQUEUE    = "INQUEUE"
 	PLAYING    = "PLAYING"
+)
+
+// communication constants
+const (
+  SERVERTYPE = "tcp"
+  SERVERNAME = "server"
+  SERVERPORT = "8080"
 )
 
 // this function sends a message through a connection and return any occourred error
