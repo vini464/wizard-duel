@@ -121,6 +121,8 @@ func mainPage(uuid string, user share.User) {
 			}
 			message.Type = share.PLAY
       err = share.SendMessage(conn, message)
+      err = share.ReceiveMessage(conn, &message)
+      fmt.Println("[debug] - You are playing with:", string(message.Data))
       conn.Close()
 		case 1:
 			conn, err := net.Dial(share.SERVERTYPE, net.JoinHostPort(share.SERVERNAME, share.SERVERPORT))

@@ -1,29 +1,43 @@
 package game
 
 import (
-	"sync"
-
 	"github.com/vini464/wizard-duel/share"
 )
 
-
+// this struct is used only for the game manager function (server-side)
 type PlayerGameData struct {
-	Username    string
-	Hand        []share.Card
-	Deck        []share.Card
-	Graveyard   []share.Card
 	HP          int
 	SP          int
 	Energy      int
 	Crystals    int
 	DamageBonus int
+	Username    string
+	Hand        []share.Card
+	Deck        []share.Card
+	Graveyard   []share.Card
 }
 
-type PrivateGameState struct {
-	Mutex       *sync.Mutex
-	PlayersData map[string]PlayerGameData // map entre o username e os dados
-	Turn        string
-	Phase       string
-	Round       int
+// Limited information about the enemy
+type HiddenData struct {
+	HandSize    int    `json:"hand-size"`
+	DeckSize    int    `json:"deck-size"`
+	Energy      int    `json:"energy"`
+	HP          int    `json:"hp"`
+	SP          int    `json:"sp"`
+	Crystals    int    `json:"crystals"`
+	DamageBonus int    `json:"damage-bonus"`
+	Username    string `json:"username"`
+	Graveyard   []byte `json:"graveyard"` // this is a []Card serialized
 }
 
+// Information that the player have access
+type SelfData struct {
+	HP          int    `json:"hp"`
+	SP          int    `json:"sp"`
+	Energy      int    `json:"energy"`
+	Crystals    int    `json:"crystals"`
+	DamageBonus int    `json:"damage-bonus"`
+	DeckSize    int    `json:"deck-size"`
+	Hand        []byte `json:"hand"`
+	Graveyard   []byte `json:"graveyard"`
+}

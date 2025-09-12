@@ -17,6 +17,7 @@ const (
 )
 
 var ONLINEUSERS = make(map[string]string) // string uuid - string username
+var GAMEQUEUE = make([]chan string, 0)    // queue that holds user uuid
 
 func main() {
 	persistence.InitializeStock()
@@ -28,6 +29,7 @@ func main() {
 
 	var user_db sync.Mutex
 	var card_db sync.Mutex
+	var queue_mutex sync.Mutex
 
 	fmt.Println("[debug] - Server Ready")
 	for {
@@ -36,12 +38,12 @@ func main() {
 			fmt.Println("[error] - connection lost")
 		} else {
 			fmt.Println("[debug] - Client Connected", conn.RemoteAddr())
-			go handle_client(conn, &user_db, &card_db)
+			go handle_client(conn, &user_db, &card_db, &queue_mutex)
 		}
 	}
 }
 
-func handle_client(conn net.Conn, user_db *sync.Mutex, card_db *sync.Mutex) {
+func handle_client(conn net.Conn, user_db *sync.Mutex, card_db *sync.Mutex, queue_mutex *sync.Mutex) {
 	for {
 		var message share.Message
 		err := share.ReceiveMessage(conn, &message)
@@ -70,7 +72,7 @@ func handle_client(conn net.Conn, user_db *sync.Mutex, card_db *sync.Mutex) {
 			get_booster(message, conn, user_db, card_db)
 		case share.PLAY:
 			fmt.Println("[debug] PLAY command:", message.Type)
-			play(message)
+			play(conn, message, queue_mutex)
 		case share.LOGOUT:
 			fmt.Println("[debug] LOGOUT command:", message.Type)
 			log_out(message, conn)
@@ -186,14 +188,14 @@ func get_booster(message share.Message, conn net.Conn, user_db *sync.Mutex, card
 		ser, err := json.Marshal(booster)
 		if err == nil {
 			user_db.Lock()
-      user.Cards = append(user.Cards, booster...)
+			user.Cards = append(user.Cards, booster...)
 			ok := persistence.UpdateUser(USERSFILEPATH, *user, *user)
-      user_db.Unlock()
+			user_db.Unlock()
 			if ok {
 				response.Type = share.OK
 				response.Data = ser
 				share.SendMessage(conn, response)
-        return
+				return
 			}
 		}
 	}
@@ -211,7 +213,37 @@ func log_out(message share.Message, conn net.Conn) {
 	share.SendMessage(conn, response)
 }
 
-func play(message share.Message) bool {
+func play(conn net.Conn, message share.Message, queue_mutex *sync.Mutex) bool {
+  
+	gamechannel := make(chan string)
 	fmt.Println("[debug] - play command", message)
+	_, ok := ONLINEUSERS[message.Uuid]
+	if !ok {
+		return false
+	}
+	queue_mutex.Lock()
+  opponent_uuid := ""
+	if len(GAMEQUEUE) == 0 {
+		GAMEQUEUE = append(GAMEQUEUE, gamechannel)
+		queue_mutex.Unlock()
+		opponent_uuid = <-gamechannel
+    gamechannel <- message.Uuid
+    fmt.Println("[debug] - uuid:", opponent_uuid)
+	} else {
+		opponent_channel := GAMEQUEUE[0]
+		GAMEQUEUE = GAMEQUEUE[1:]
+		queue_mutex.Unlock()
+    fmt.Println("[debug] - uuid:", message.Uuid)
+		opponent_channel <- message.Uuid
+    opponent_uuid = <-opponent_channel 
+	}
+	// the execution is blocked until a player removes this player from queue or this player removes another
+
+	message = share.Message{ // sends a message with the initial data
+		Type: share.OK,
+		Data: []byte(ONLINEUSERS[opponent_uuid]),
+	}
+	share.SendMessage(conn, message)
+
 	return true
 }
