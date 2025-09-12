@@ -28,11 +28,11 @@ Now that you have a playable game, let's learn how a game turn works:
 ### Phase Four - Maintenance
 
 - You should only keep at most six cards on your hand, if there are more than that, discard
-them as you wish.
+them randomly.
 
-### Phase Five - End
+### Phase Five - Waiting
 
-- Nothing to do, just pass your turn to your opponent
+- Nothing to do, it's your opponent' turn
 
 Now let's stablish some rules:
 

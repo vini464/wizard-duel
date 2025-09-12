@@ -19,19 +19,22 @@ type Message struct {
 
 // message constants
 const (
-	LOGIN      = "LOGIN"
-	LOGOUT     = "LOGOUT"
-	REGISTER   = "REGISTER"
-	GETBOOSTER = "GETBOOSTER"
-	SAVEDECK   = "SAVEDECK"
-	PLAY       = "PLAY"
-	PLACECARD  = "PLACECARD"
-	SKIPPHASE  = "SKIPPHASE"
-	SURRENDER  = "SURRENDER"
-	OK         = "OK"
-	ERROR      = "ERROR"
-	INQUEUE    = "INQUEUE"
-	PLAYING    = "PLAYING"
+	LOGIN           = "LOGIN"
+	LOGOUT          = "LOGOUT"
+	REGISTER        = "REGISTER"
+	GETBOOSTER      = "GETBOOSTER"
+	SAVEDECK        = "SAVEDECK"
+	PLAY            = "PLAY"
+	PLACECARD       = "PLACECARD"
+	SKIPPHASE       = "SKIPPHASE"
+	SURRENDER       = "SURRENDER"
+	OK              = "OK"
+	ERROR           = "ERROR"
+	INQUEUE         = "INQUEUE"
+	PLAYING         = "PLAYING"
+	UPDATEGAMESTATE = "UPDATEGAMESTATE"
+	WINNER          = "WINNER"
+	LOSER           = "LOSER"
 )
 
 // communication constants
