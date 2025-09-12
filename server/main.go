@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/vini464/wizard-duel/persistence"
+	"github.com/vini464/wizard-duel/server/game"
 	"github.com/vini464/wizard-duel/share"
 )
 
@@ -17,7 +18,7 @@ const (
 )
 
 var ONLINEUSERS = make(map[string]string) // string uuid - string username
-var GAMEQUEUE = make([]chan string, 0)    // queue that holds user uuid
+var GAMEQUEUE = make([]net.Conn, 0)       // queue that holds user connection
 
 func main() {
 	persistence.InitializeStock()
@@ -44,42 +45,39 @@ func main() {
 }
 
 func handle_client(conn net.Conn, user_db *sync.Mutex, card_db *sync.Mutex, queue_mutex *sync.Mutex) {
-	for {
-		var message share.Message
-		err := share.ReceiveMessage(conn, &message)
-		fmt.Println("[debug] - error:", err)
-		if err != nil {
-			if err == io.EOF {
-				fmt.Println("[info] - Client disconnected!")
-				return
-			} else {
-				fmt.Println("[error] - Connection lost!")
-				return
-			}
+	var message share.Message
+	err := share.ReceiveMessage(conn, &message)
+	fmt.Println("[debug] - error:", err)
+	if err != nil {
+		if err == io.EOF {
+			fmt.Println("[info] - Client disconnected!")
+			return
+		} else {
+			fmt.Println("[error] - Connection lost!")
+			return
 		}
-		switch message.Type {
-		case share.REGISTER:
-			fmt.Println("[debug] REGISTER command:", message.Type)
-			register(message, conn, user_db)
-		case share.LOGIN:
-			fmt.Println("[debug] LOGIN command:", message.Type)
-			login(message, conn, user_db)
-		case share.SAVEDECK:
-			fmt.Println("[debug] SAVEDECK command:", message.Type)
-			save_deck(message, conn, user_db)
-		case share.GETBOOSTER:
-			fmt.Println("[debug] GETBOOSTER command:", message.Type)
-			get_booster(message, conn, user_db, card_db)
-		case share.PLAY:
-			fmt.Println("[debug] PLAY command:", message.Type)
-			play(conn, message, queue_mutex)
-		case share.LOGOUT:
-			fmt.Println("[debug] LOGOUT command:", message.Type)
-			log_out(message, conn)
-		default:
-			fmt.Println("[error] unknow command:", message.Type)
-		}
-
+	}
+	switch message.Type {
+	case share.REGISTER:
+		fmt.Println("[debug] REGISTER command:", message.Type)
+		register(message, conn, user_db)
+	case share.LOGIN:
+		fmt.Println("[debug] LOGIN command:", message.Type)
+		login(message, conn, user_db)
+	case share.SAVEDECK:
+		fmt.Println("[debug] SAVEDECK command:", message.Type)
+		save_deck(message, conn, user_db)
+	case share.GETBOOSTER:
+		fmt.Println("[debug] GETBOOSTER command:", message.Type)
+		get_booster(message, conn, user_db, card_db)
+	case share.PLAY:
+		fmt.Println("[debug] PLAY command:", message.Type)
+		play(conn, queue_mutex)
+	case share.LOGOUT:
+		fmt.Println("[debug] LOGOUT command:", message.Type)
+		log_out(message, conn)
+	default:
+		fmt.Println("[error] unknow command:", message.Type)
 	}
 }
 
@@ -213,37 +211,74 @@ func log_out(message share.Message, conn net.Conn) {
 	share.SendMessage(conn, response)
 }
 
-func play(conn net.Conn, message share.Message, queue_mutex *sync.Mutex) bool {
-  
-	gamechannel := make(chan string)
-	fmt.Println("[debug] - play command", message)
-	_, ok := ONLINEUSERS[message.Uuid]
-	if !ok {
-		return false
-	}
+func play(conn net.Conn, queue_mutex *sync.Mutex) {
 	queue_mutex.Lock()
-  opponent_uuid := ""
 	if len(GAMEQUEUE) == 0 {
-		GAMEQUEUE = append(GAMEQUEUE, gamechannel)
+		GAMEQUEUE = append(GAMEQUEUE, conn)
 		queue_mutex.Unlock()
-		opponent_uuid = <-gamechannel
-    gamechannel <- message.Uuid
-    fmt.Println("[debug] - uuid:", opponent_uuid)
 	} else {
-		opponent_channel := GAMEQUEUE[0]
+		op_conn := GAMEQUEUE[0]
 		GAMEQUEUE = GAMEQUEUE[1:]
 		queue_mutex.Unlock()
-    fmt.Println("[debug] - uuid:", message.Uuid)
-		opponent_channel <- message.Uuid
-    opponent_uuid = <-opponent_channel 
-	}
-	// the execution is blocked until a player removes this player from queue or this player removes another
 
-	message = share.Message{ // sends a message with the initial data
+		pl_deck := make([]share.Card, 0)
+		pl_username := ""
+		op_deck := make([]share.Card, 0)
+		op_username := ""
+
+		pl_ok := make(chan bool)
+		op_ok := make(chan bool)
+		go getPlayerData(conn, &pl_deck, &pl_username, pl_ok)
+		go getPlayerData(op_conn, &op_deck, &op_username, op_ok)
+		ok1 := <-pl_ok
+		ok2 := <-op_ok
+		if ok1 && ok2 {
+			winner := game.GameManagement(conn, op_conn, pl_deck, op_deck, pl_username, op_username)
+      user := persistence.RetrieveUser(USERSFILEPATH, winner)
+      user.Coins += 5
+      persistence.UpdateUser(USERSFILEPATH, *user, *user)
+      
+		} else {
+			msg := share.Message{
+				Type: share.ERROR,
+				Data: []byte("An error occurred"),
+			}
+			share.SendMessage(conn, msg)
+			share.SendMessage(op_conn, msg)
+		}
+	}
+}
+
+func getPlayerData(conn net.Conn, deck *[]share.Card, username *string, ok chan bool) {
+	pl_deck := make([]share.Card, 0)
+	pl_username := ""
+	msg := share.Message{
 		Type: share.OK,
-		Data: []byte(ONLINEUSERS[opponent_uuid]),
+		Data: []byte("Choose Your Deck"),
 	}
-	share.SendMessage(conn, message)
-
-	return true
+	err := share.SendMessage(conn, msg)
+	if err == nil {
+		err = share.ReceiveMessage(conn, &msg)
+		if err == nil {
+			err = json.Unmarshal(msg.Data, &pl_deck)
+			if err == nil {
+				*deck = pl_deck
+				msg := share.Message{
+					Type: share.OK,
+					Data: []byte("Send Username"),
+				}
+				err := share.SendMessage(conn, msg)
+				if err == nil {
+					err = share.ReceiveMessage(conn, &msg)
+					if err == nil {
+						pl_username = string(msg.Data)
+						*username = pl_username
+						ok <- true
+						return
+					}
+				}
+			}
+		}
+	}
+	ok <- false
 }
