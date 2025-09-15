@@ -120,10 +120,84 @@ func mainPage(uuid string, user share.User) {
 				return
 			}
 			message.Type = share.PLAY
-      err = share.SendMessage(conn, message)
-      err = share.ReceiveMessage(conn, &message)
-      fmt.Println("[debug] - You are playing with:", string(message.Data))
-      conn.Close()
+			err = share.SendMessage(conn, message)
+			playing := true
+			for playing {
+				share.ReceiveMessage(conn, &message)
+				switch message.Type {
+				case share.INQUEUE:
+					fmt.Println("You are in queue... wait for an oponent")
+				case share.WINNER, share.LOSER:
+					fmt.Println("Game Over")
+					if message.Type == share.WINNER {
+						fmt.Println("You win")
+					} else {
+						fmt.Println("You lose")
+					}
+					playing = false
+
+				case share.ERROR:
+					fmt.Println("an error ocurred!")
+					playing = false
+
+				case share.UPDATEGAMESTATE:
+					var gamesstate share.GameState
+					json.Unmarshal(message.Data, &gamesstate)
+					var self share.ShowableData
+					var op share.HiddenData
+					json.Unmarshal(gamesstate.Self, &self)
+					json.Unmarshal(gamesstate.Opponent, &op)
+					if self.Phase != "WAIT" {
+						if self.Phase == "MAIN" {
+							fmt.Println("Your are at main fase")
+							hand := make([]string, 0)
+							var handcards []share.Card
+							json.Unmarshal(self.Hand, &handcards)
+
+							fmt.Println("Your cards:")
+							for _, n := range handcards {
+								fmt.Println(n)
+								if n.Cost <= self.Energy {
+									hand = append(hand, n.Name)
+								}
+							}
+              fmt.Println("You - energy:", self.Energy,  "life: ", self.HP, "shield:", self.SP, "deck:", self.DeckSize, "Bonus: ", self.DamageBonus)
+              fmt.Println("Opponent - energy:", op.Energy,  "life: ", op.HP, "shield:", op.SP, "deck:", op.DeckSize, "Bonus: ", op.DamageBonus)
+
+							c := Menu("Choose your action:", "place card", "skip phase")
+
+							if len(hand) > 0 && c == 0 {
+								cardid := Menu("Choose a card: ", hand...)
+								message := share.Message{Type: share.PLACECARD, Data: []byte(hand[cardid])}
+								share.SendMessage(conn, message)
+							} else {
+								message := share.Message{Type: share.SKIPPHASE}
+								share.SendMessage(conn, message)
+							}
+
+						} else {
+							message := share.Message{Type: share.SKIPPHASE}
+							share.SendMessage(conn, message)
+						}
+					}
+				case share.SELECTDECK:
+					fmt.Println("Select deck:")
+					names := make([]string, 0)
+					for name := range user.Decks {
+						names = append(names, name)
+					}
+					choice := Menu("Choose a deck", names...)
+					message.Type = share.OK
+					message.Data = []byte(names[choice])
+					share.SendMessage(conn, message)
+				case share.OPONENTMOVE:
+					fmt.Println("Oponent played:", string(message.Data))
+				case share.OPONENTNAME:
+					fmt.Println("Your are playing against:", string(message.Data))
+				}
+			}
+
+			conn.Close()
 		case 1:
 			conn, err := net.Dial(share.SERVERTYPE, net.JoinHostPort(share.SERVERNAME, share.SERVERPORT))
 			if err != nil {
@@ -154,7 +228,7 @@ func mainPage(uuid string, user share.User) {
 			} else {
 				println("[debug] - Response", message.Type)
 			}
-    conn.Close()
+			conn.Close()
 		case 2:
 			if len(user.Cards) > 20 {
 				deckcards := make([]share.Card, 0)
@@ -191,7 +265,7 @@ func mainPage(uuid string, user share.User) {
 				}
 				err = share.ReceiveMessage(conn, &message)
 				fmt.Println("[debug] response was:", message.Type)
-        conn.Close()
+				conn.Close()
 			}
 		case 3:
 			return

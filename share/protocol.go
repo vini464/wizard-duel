@@ -35,6 +35,10 @@ const (
 	UPDATEGAMESTATE = "UPDATEGAMESTATE"
 	WINNER          = "WINNER"
 	LOSER           = "LOSER"
+	SELECTDECK      = "SELECTDECK"
+	OPONENTNAME     = "OPONENTNAME"
+	OPONENTMOVE     = "OPONENTMOVE"
+	PLAYERMOVE      = "PLAYERMOVE"
 )
 
 // communication constants
