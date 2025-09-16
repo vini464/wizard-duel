@@ -11,12 +11,13 @@ import (
 
 	"github.com/vini464/wizard-duel/share"
 )
+
 var HOSTNAME = "localhost"
 
 func main() {
 	for {
 		// LOGIN - REGISTER page
-    HOSTNAME = Input("Insert server HOSTNAME\n> ")
+		HOSTNAME = Input("Insert server HOSTNAME\n> ")
 		credentials := GetCredentials()
 		choice := Menu("> Wizard Duel <", "login", "register", "exit")
 		switch choice {
@@ -102,14 +103,14 @@ func login(credentials map[string]string) {
 	}
 
 	fmt.Println("[debug] - Connected, uuid:", uuid)
-	fmt.Println("[debug] - Connected, user:", user)
+	fmt.Println("You are connected")
 	conn.Close()
 	mainPage(uuid, user)
 }
 
 func mainPage(uuid string, user share.User) {
 	for {
-		choice := Menu("> MAIN PAGE <", "play", "booster", "create deck", "exit")
+		choice := Menu("> MAIN PAGE <", "play", "booster", "create deck", "see cards", "see decks", "exit")
 		message := share.Message{
 			Uuid: uuid,
 		}
@@ -274,6 +275,27 @@ func mainPage(uuid string, user share.User) {
 				conn.Close()
 			}
 		case 3:
+			fmt.Println("Your cards:")
+			for _, card := range user.Cards {
+				fmt.Print(card.Name, "| cost:", card.Cost, "| rariry:", card.Rarity, "| type:", card.Type, "| effect: ")
+				for _, ef := range card.Effects {
+					fmt.Print(ef.Type, "-", ef.Amount)
+				}
+				fmt.Println("")
+			}
+		case 4:
+			fmt.Println("Your decks:")
+			for name, deck := range user.Decks {
+				fmt.Println(name, ":")
+				for _, card := range deck {
+					fmt.Print(card.Name, "| cost:", card.Cost, "| rariry:", card.Rarity, "| type:", card.Type, "| effect: ")
+					for _, ef := range card.Effects {
+						fmt.Print(ef.Type, "-", ef.Amount)
+					}
+					fmt.Println("")
+				}
+			}
+		case 5:
 			return
 		}
 	}
