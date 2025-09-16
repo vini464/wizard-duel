@@ -9,7 +9,7 @@ import (
 	"sync"
 
 	"github.com/vini464/wizard-duel/persistence"
-	"github.com/vini464/wizard-duel/server/game"
+	"github.com/vini464/wizard-duel/game"
 	"github.com/vini464/wizard-duel/share"
 )
 
