@@ -12,8 +12,6 @@ services:
         - ./database:/app/database:rw
   
   client:
-    depends_on: 
-      - server
     build:
       context: "./"
       dockerfile: "./client/Dockerfile"
