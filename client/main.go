@@ -56,7 +56,7 @@ func register(credentials map[string]string) bool {
 	}
 	err = share.ReceiveMessage(conn, &message)
 	if err != nil || message.Type == share.ERROR {
-		fmt.Println("[error] - error connection, message type:", message.Type)
+		fmt.Println("[error] - error connection")
 		return false
 	}
 	return true
@@ -122,6 +122,8 @@ func mainPage(uuid string, user share.User) {
 			message.Type = share.PLAY
 			err = share.SendMessage(conn, message)
 			playing := true
+			var self share.ShowableData
+			var op share.HiddenData
 			for playing {
 				share.ReceiveMessage(conn, &message)
 				switch message.Type {
@@ -143,26 +145,25 @@ func mainPage(uuid string, user share.User) {
 				case share.UPDATEGAMESTATE:
 					var gamesstate share.GameState
 					json.Unmarshal(message.Data, &gamesstate)
-					var self share.ShowableData
-					var op share.HiddenData
 					json.Unmarshal(gamesstate.Self, &self)
 					json.Unmarshal(gamesstate.Opponent, &op)
 					if self.Phase != "WAIT" {
 						if self.Phase == "MAIN" {
-							fmt.Println("Your are at main fase")
 							hand := make([]string, 0)
 							var handcards []share.Card
 							json.Unmarshal(self.Hand, &handcards)
 
-							fmt.Println("Your cards:")
+							fmt.Println("Game Info")
+							fmt.Println("You - energy:", self.Energy, "crystals:", self.Crystals, "life: ", self.HP, "shield:", self.SP, "deck:", self.DeckSize, "DamageBonus: ", self.DamageBonus)
+							fmt.Println("Opponent - energy:", op.Energy, "cystals:", op.Crystals, "life: ", op.HP, "shield:", op.SP, "deck:", op.DeckSize, "DamageBonus: ", op.DamageBonus)
+
+							fmt.Println("Your hand:")
 							for _, n := range handcards {
 								fmt.Println(n)
 								if n.Cost <= self.Energy {
 									hand = append(hand, n.Name)
 								}
 							}
-              fmt.Println("You - energy:", self.Energy,  "life: ", self.HP, "shield:", self.SP, "deck:", self.DeckSize, "Bonus: ", self.DamageBonus)
-              fmt.Println("Opponent - energy:", op.Energy,  "life: ", op.HP, "shield:", op.SP, "deck:", op.DeckSize, "Bonus: ", op.DamageBonus)
 
 							c := Menu("Choose your action:", "place card", "skip phase")
 
@@ -192,8 +193,14 @@ func mainPage(uuid string, user share.User) {
 					share.SendMessage(conn, message)
 				case share.OPONENTMOVE:
 					fmt.Println("Oponent played:", string(message.Data))
+					fmt.Println("Game Info")
+					fmt.Println("You - energy:", self.Energy, "crystals:", self.Crystals, "life: ", self.HP, "shield:", self.SP, "deck:", self.DeckSize, "DamageBonus: ", self.DamageBonus)
+					fmt.Println("Opponent - energy:", op.Energy, "cystals:", op.Crystals, "life: ", op.HP, "shield:", op.SP, "deck:", op.DeckSize, "DamageBonus: ", op.DamageBonus)
 				case share.OPONENTNAME:
 					fmt.Println("Your are playing against:", string(message.Data))
+					fmt.Println("Game Info")
+					fmt.Println("You - energy:", self.Energy, "crystals:", self.Crystals, "life: ", self.HP, "shield:", self.SP, "deck:", self.DeckSize, "DamageBonus: ", self.DamageBonus)
+					fmt.Println("Opponent - energy:", op.Energy, "cystals:", op.Crystals, "life: ", op.HP, "shield:", op.SP, "deck:", op.DeckSize, "DamageBonus: ", op.DamageBonus)
 				}
 			}
 
