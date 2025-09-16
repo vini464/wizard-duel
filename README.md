@@ -1,3 +1,10 @@
+# TL;DR;
+You can run the game by using the following commands:
+
+* `docker compose up --build server` - to run the server
+* `docker compose run --build client` - for each client you wish to run.
+
+
 # Wizard Duel
 
 A virtual card game inspired by Magic the Gathering and Hearthstone. Open boosters, create your
