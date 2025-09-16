@@ -279,7 +279,7 @@ func mainPage(uuid string, user share.User) {
 			for _, card := range user.Cards {
 				fmt.Print(card.Name, "| cost:", card.Cost, "| rariry:", card.Rarity, "| type:", card.Type, "| effect: ")
 				for _, ef := range card.Effects {
-					fmt.Print(ef.Type, "-", ef.Amount)
+					fmt.Print(ef.Type, " - ", ef.Amount, " ")
 				}
 				fmt.Println("")
 			}
@@ -290,7 +290,7 @@ func mainPage(uuid string, user share.User) {
 				for _, card := range deck {
 					fmt.Print(card.Name, "| cost:", card.Cost, "| rariry:", card.Rarity, "| type:", card.Type, "| effect: ")
 					for _, ef := range card.Effects {
-						fmt.Print(ef.Type, "-", ef.Amount)
+						fmt.Print(ef.Type, " - ", ef.Amount, " ")
 					}
 					fmt.Println("")
 				}
