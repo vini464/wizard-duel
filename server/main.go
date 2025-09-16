@@ -63,6 +63,8 @@ func handle_client(conn net.Conn, user_db *sync.Mutex, card_db *sync.Mutex, queu
 		}
 	}
 	switch message.Type {
+  case share.ECHO:
+    fmt.Println("client:",conn.RemoteAddr(), "data:", string(message.Data), "latency:", message.TimeStamp)
 	case share.REGISTER:
 		fmt.Println("[debug] REGISTER command:", message.Type)
 		register(message, conn, user_db)

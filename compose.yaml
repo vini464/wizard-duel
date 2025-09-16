@@ -24,6 +24,18 @@ services:
     networks:
         - internet
 
+  test:
+    depends_on: 
+      - server
+    build:
+      context: "./"
+      dockerfile: "./tests/Dockerfile"
+    image: "test:v1"
+    tty: true
+    stdin_open: true
+    networks:
+        - internet
+
 networks:
   internet:
     driver: bridge

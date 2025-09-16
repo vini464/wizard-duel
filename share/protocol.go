@@ -38,6 +38,7 @@ const (
 	OPONENTNAME     = "OPONENTNAME"
 	OPONENTMOVE     = "OPONENTMOVE"
 	PLAYERMOVE      = "PLAYERMOVE"
+	ECHO            = "ECHO"
 )
 
 // communication constants
