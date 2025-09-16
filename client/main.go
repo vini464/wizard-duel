@@ -11,10 +11,12 @@ import (
 
 	"github.com/vini464/wizard-duel/share"
 )
+var HOSTNAME = "localhost"
 
 func main() {
 	for {
 		// LOGIN - REGISTER page
+    HOSTNAME = Input("Insert server HOSTNAME\n> ")
 		credentials := GetCredentials()
 		choice := Menu("> Wizard Duel <", "login", "register", "exit")
 		switch choice {
@@ -34,7 +36,7 @@ func main() {
 }
 
 func register(credentials map[string]string) bool {
-	conn, err := net.Dial(share.SERVERTYPE, net.JoinHostPort(share.SERVERNAME, share.SERVERPORT))
+	conn, err := net.Dial(share.SERVERTYPE, net.JoinHostPort(HOSTNAME, share.SERVERPORT))
 	if err != nil {
 		fmt.Println("[error] - Unable to Connect")
 		return false
@@ -64,7 +66,7 @@ func register(credentials map[string]string) bool {
 
 func login(credentials map[string]string) {
 	var user share.User
-	conn, err := net.Dial(share.SERVERTYPE, net.JoinHostPort(share.SERVERNAME, share.SERVERPORT))
+	conn, err := net.Dial(share.SERVERTYPE, net.JoinHostPort(HOSTNAME, share.SERVERPORT))
 	if err != nil {
 		fmt.Println("[error] - Unable to Connect")
 		return
@@ -114,7 +116,7 @@ func mainPage(uuid string, user share.User) {
 
 		switch choice {
 		case 0:
-			conn, err := net.Dial(share.SERVERTYPE, net.JoinHostPort(share.SERVERNAME, share.SERVERPORT))
+			conn, err := net.Dial(share.SERVERTYPE, net.JoinHostPort(HOSTNAME, share.SERVERPORT))
 			if err != nil {
 				fmt.Println("[error] - Unable to Connect")
 				return
@@ -203,7 +205,7 @@ func mainPage(uuid string, user share.User) {
 
 			conn.Close()
 		case 1:
-			conn, err := net.Dial(share.SERVERTYPE, net.JoinHostPort(share.SERVERNAME, share.SERVERPORT))
+			conn, err := net.Dial(share.SERVERTYPE, net.JoinHostPort(HOSTNAME, share.SERVERPORT))
 			if err != nil {
 				fmt.Println("[error] - Unable to Connect")
 				return
@@ -256,7 +258,7 @@ func mainPage(uuid string, user share.User) {
 				if err != nil {
 					return
 				}
-				conn, err := net.Dial(share.SERVERTYPE, net.JoinHostPort(share.SERVERNAME, share.SERVERPORT))
+				conn, err := net.Dial(share.SERVERTYPE, net.JoinHostPort(HOSTNAME, share.SERVERPORT))
 				if err != nil {
 					fmt.Println("[error] - Unable to Connect")
 					return

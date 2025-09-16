@@ -27,7 +27,7 @@ var GAMEQUEUE = make([]Userinfo, 0)       // queue that holds user connection
 
 func main() {
 	persistence.InitializeStock()
-	server, err := net.Listen(share.SERVERTYPE, net.JoinHostPort(share.SERVERNAME, share.SERVERPORT))
+	server, err := net.Listen(share.SERVERTYPE, net.JoinHostPort("localhost", share.SERVERPORT))
 	if err != nil {
 		panic(err)
 	}
