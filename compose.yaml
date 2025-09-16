@@ -7,8 +7,7 @@ services:
     container_name: "server"
     ports: 
       - "8080:8080"
-    networks:
-        - internet
+    network_mode: "host"
     volumes:
         - ./database:/app/database:rw
   
@@ -21,23 +20,4 @@ services:
     image: "client:v1"
     tty: true
     stdin_open: true
-    networks:
-        - internet
-
-  test:
-    depends_on: 
-      - server
-    build:
-      context: "./"
-      dockerfile: "./tests/Dockerfile"
-    image: "test:v1"
-    tty: true
-    stdin_open: true
-    networks:
-        - internet
-
-networks:
-  internet:
-    driver: bridge
-    name: "internet"
-
+    network_mode: "host"
