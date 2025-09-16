@@ -3,7 +3,6 @@ package share
 import (
 	"encoding/binary"
 	"encoding/json"
-	"fmt"
 	"net"
 	"time"
 )
@@ -94,7 +93,6 @@ func ReceiveMessage(conn net.Conn, message *Message) error {
 	err := json.Unmarshal(data, message)
 	if err == nil {
 		message.TimeStamp = currentTime.UnixNano() - message.TimeStamp
-		fmt.Println("[LATENCY] -", message.TimeStamp, "ns")
 	}
 	return err
 }

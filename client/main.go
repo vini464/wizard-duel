@@ -198,9 +198,6 @@ func mainPage(uuid string, user share.User) {
 					fmt.Println("Opponent - energy:", op.Energy, "cystals:", op.Crystals, "life: ", op.HP, "shield:", op.SP, "deck:", op.DeckSize, "DamageBonus: ", op.DamageBonus)
 				case share.OPONENTNAME:
 					fmt.Println("Your are playing against:", string(message.Data))
-					fmt.Println("Game Info")
-					fmt.Println("You - energy:", self.Energy, "crystals:", self.Crystals, "life: ", self.HP, "shield:", self.SP, "deck:", self.DeckSize, "DamageBonus: ", self.DamageBonus)
-					fmt.Println("Opponent - energy:", op.Energy, "cystals:", op.Crystals, "life: ", op.HP, "shield:", op.SP, "deck:", op.DeckSize, "DamageBonus: ", op.DamageBonus)
 				}
 			}
 

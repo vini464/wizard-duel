@@ -24,6 +24,7 @@ type PlayerGameData struct {
 }
 
 const (
+	BEGIN       = "BEGIN"
 	DRAW        = "DRAW"
 	REFILL      = "REFILL"
 	MAIN        = "MAIN"
@@ -43,18 +44,18 @@ func GameManagement(player_conn net.Conn, opponent_conn net.Conn, player_deck []
 
 	fmt.Println("[debug] - Game started!")
 
-	if rand.IntN(91243)%2 == 0 {
+	if rand.IntN(91244)%2 == 0 {
 		player_data.Phase = DRAW
 		opponnent_data.Phase = WAIT
 	} else {
 		opponnent_data.Phase = DRAW
 		player_data.Phase = WAIT
 	}
-
+	/**
 	share.SendMessage(opponent_conn, message)
 	message.Data = []byte(opponent_username)
 	share.SendMessage(player_conn, message)
-	fmt.Println("[debug] - send message!")
+	*/
 
 	player_message := make(chan share.Message)
 	opponent_message := make(chan share.Message)
@@ -93,11 +94,12 @@ func GameManagement(player_conn net.Conn, opponent_conn net.Conn, player_deck []
 
 		case player_mes := <-player_message:
 			if player_data.Phase != WAIT {
-				fmt.Println("player", player_mes)
+				fmt.Println(player_username, "-", player_mes)
 				switch player_mes.Type {
 
 				case share.ERROR:
 					fmt.Println(player_username, "Some shit Happened", string(player_mes.Data))
+          winner(opponent_conn)
 					op_stop = true // ends opponent goroutine
 					return opponent_username
 
@@ -108,12 +110,11 @@ func GameManagement(player_conn net.Conn, opponent_conn net.Conn, player_deck []
 
 				case share.PLACECARD:
 					cardname := string(player_mes.Data) // receives the name of the card
-          fmt.Println("[debug] - looking for", cardname)
 					for id, card := range player_data.Hand {
 						if cardname == card.Name {
-              fmt.Println("[debug] - Card", card.Name, "found")
 							HandleCard(&player_data, &opponnent_data, card)
 							player_data.Graveyard = append(player_data.Graveyard, card)
+							player_data.Energy -= card.Cost
 							player_data.Hand = append(player_data.Hand[:id], player_data.Hand[id+1:]...)
 							message := share.Message{Type: share.OPONENTMOVE, Data: []byte(cardname)}
 							share.SendMessage(opponent_conn, message)
@@ -121,18 +122,19 @@ func GameManagement(player_conn net.Conn, opponent_conn net.Conn, player_deck []
 						}
 					}
 				case share.SKIPPHASE:
-					fmt.Println("phase:", player_data.Phase)
+					player_data.Phase = skipPhase(player_data.Phase)
 					HandlePhase(&player_data, &opponnent_data)
-					fmt.Println("phase:", player_data.Phase)
 				}
 			}
 		case opponent_mes := <-opponent_message:
 			if opponnent_data.Phase != WAIT {
+				fmt.Println(opponent_username, "-", opponent_mes)
 
 				switch opponent_mes.Type {
 
 				case share.ERROR:
 					fmt.Println(opponent_username, "- Some shit Happened")
+          winner(player_conn)
 					pl_stop = true // ends opponent goroutine
 					return player_username
 
@@ -143,13 +145,11 @@ func GameManagement(player_conn net.Conn, opponent_conn net.Conn, player_deck []
 
 				case share.PLACECARD:
 					cardname := string(opponent_mes.Data) // receives the name of the card
-          fmt.Println("[debug] - looking for", cardname)
 					for id, card := range opponnent_data.Hand {
-						if cardname == card.Name && card.Cost <= opponnent_data.Energy{
-              fmt.Println("[debug] - Card", card.Name, "found")
+						if cardname == card.Name && card.Cost <= opponnent_data.Energy {
 							HandleCard(&opponnent_data, &player_data, card)
 							opponnent_data.Graveyard = append(opponnent_data.Graveyard, card)
-              opponnent_data.Energy -= card.Cost
+							opponnent_data.Energy -= card.Cost
 							opponnent_data.Hand = append(opponnent_data.Hand[:id], opponnent_data.Hand[id+1:]...)
 							message := share.Message{Type: share.OPONENTMOVE, Data: []byte(cardname)}
 							share.SendMessage(player_conn, message)
@@ -157,9 +157,8 @@ func GameManagement(player_conn net.Conn, opponent_conn net.Conn, player_deck []
 						}
 					}
 				case share.SKIPPHASE:
-					fmt.Println("phase:", opponnent_data.Phase)
+					opponnent_data.Phase = skipPhase(opponnent_data.Phase)
 					HandlePhase(&opponnent_data, &player_data)
-					fmt.Println("phase:", opponnent_data.Phase)
 				}
 			}
 		}
@@ -195,14 +194,13 @@ func loser(conn net.Conn) {
 func receiving(conn net.Conn, channel chan share.Message, stop *bool) {
 	var message share.Message
 	for !(*stop) {
-		fmt.Println("Receiving data")
 		err := share.ReceiveMessage(conn, &message)
 		if err != nil {
 			message.Type = share.ERROR
 			message.Data = []byte(err.Error())
 			return // kill function if an error occurred
 		}
-		fmt.Println("Message type:", message.Type)
+    fmt.Println("[LATENCY -", conn.RemoteAddr(), "]:", message.TimeStamp)
 		channel <- message
 	}
 }
@@ -312,7 +310,6 @@ func HandleCard(player *PlayerGameData, opponent *PlayerGameData, card share.Car
 }
 
 func HandlePhase(player *PlayerGameData, opponent *PlayerGameData) {
-	player.Phase = skipPhase(player.Phase)
 	switch player.Phase {
 
 	case DRAW:
@@ -331,7 +328,7 @@ func HandlePhase(player *PlayerGameData, opponent *PlayerGameData) {
 			player.Hand = player.Hand[(len(player.Hand) - 6):]
 		}
 	case WAIT:
-		opponent.Phase = DRAW
+		opponent.Phase = skipPhase(opponent.Phase)
 	}
 }
 
@@ -346,6 +343,8 @@ func skipPhase(actualPhase string) string {
 	case MAINTENANCE:
 		return WAIT
 	case WAIT:
+		return BEGIN
+	case BEGIN:
 		return DRAW
 	default:
 		return MAIN
